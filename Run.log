@@ -1,0 +1,60 @@
+WARNING: Target column 'converted' has only one unique value. Classification cannot be performed.
+None
+C:\Users\cvaleti\AppData\Local\Programs\Python\Python310\lib\site-packages\mlflow\types\utils.py:452: UserWarning: Hint: Inferred schema contains integer column(s). Integer columns in Python cannot represent missing values. If your input data contains missing values at inference time, it will be encoded as floats and will cause a schema enforcement error. The best way to avoid this problem is to infer the model schema based on a realistic data sample (training dataset) that includes missing values. Alternatively, you can declare integer columns as doubles (float64) whenever these columns may have missing values. See `Handling Integers With Missing Values <https://www.mlflow.org/docs/latest/models.html#handling-integers-with-missing-values>`_ for more details.
+  warnings.warn(
+Downloading artifacts: 100%|█████████████████████████████████████████████████████████████████████████████████████████████████████████| 7/7 [00:00<?, ?it/s]
+Registered model 'regression_Linear Regression' already exists. Creating a new version of this model...
+Created version '5' of model 'regression_Linear Regression'.
+C:\Users\cvaleti\AppData\Local\Programs\Python\Python310\lib\site-packages\mlflow\types\utils.py:452: UserWarning: Hint: Inferred schema contains integer column(s). Integer columns in Python cannot represent missing values. If your input data contains missing values at inference time, it will be encoded as floats and will cause a schema enforcement error. The best way to avoid this problem is to infer the model schema based on a realistic data sample (training dataset) that includes missing values. Alternatively, you can declare integer columns as doubles (float64) whenever these columns may have missing values. See `Handling Integers With Missing Values <https://www.mlflow.org/docs/latest/models.html#handling-integers-with-missing-values>`_ for more details.
+  warnings.warn(
+Downloading artifacts: 100%|█████████████████████████████████████████████████████████████████████████████████████████████████████████| 7/7 [00:00<?, ?it/s]
+Registered model 'regression_Ridge' already exists. Creating a new version of this model...
+Created version '5' of model 'regression_Ridge'.
+C:\Users\cvaleti\AppData\Local\Programs\Python\Python310\lib\site-packages\mlflow\types\utils.py:452: UserWarning: Hint: Inferred schema contains integer column(s). Integer columns in Python cannot represent missing values. If your input data contains missing values at inference time, it will be encoded as floats and will cause a schema enforcement error. The best way to avoid this problem is to infer the model schema based on a realistic data sample (training dataset) that includes missing values. Alternatively, you can declare integer columns as doubles (float64) whenever these columns may have missing values. See `Handling Integers With Missing Values <https://www.mlflow.org/docs/latest/models.html#handling-integers-with-missing-values>`_ for more details.
+  warnings.warn(
+Downloading artifacts: 100%|████████████████████████████████████████████████████████████████████████████████████████████████| 7/7 [00:00<00:00, 446.59it/s]
+Registered model 'regression_Lasso' already exists. Creating a new version of this model...
+Created version '5' of model 'regression_Lasso'.
+C:\Users\cvaleti\AppData\Local\Programs\Python\Python310\lib\site-packages\mlflow\types\utils.py:452: UserWarning: Hint: Inferred schema contains integer column(s). Integer columns in Python cannot represent missing values. If your input data contains missing values at inference time, it will be encoded as floats and will cause a schema enforcement error. The best way to avoid this problem is to infer the model schema based on a realistic data sample (training dataset) that includes missing values. Alternatively, you can declare integer columns as doubles (float64) whenever these columns may have missing values. See `Handling Integers With Missing Values <https://www.mlflow.org/docs/latest/models.html#handling-integers-with-missing-values>`_ for more details.
+  warnings.warn(
+Downloading artifacts: 100%|█████████████████████████████████████████████████████████████████████████████████████████████████| 7/7 [00:00<00:00, 72.38it/s]
+Registered model 'regression_Random Forest Regressor' already exists. Creating a new version of this model...
+Created version '5' of model 'regression_Random Forest Regressor'.
+C:\Users\cvaleti\AppData\Local\Programs\Python\Python310\lib\site-packages\mlflow\types\utils.py:452: UserWarning: Hint: Inferred schema contains integer column(s). Integer columns in Python cannot represent missing values. If your input data contains missing values at inference time, it will be encoded as floats and will cause a schema enforcement error. The best way to avoid this problem is to infer the model schema based on a realistic data sample (training dataset) that includes missing values. Alternatively, you can declare integer columns as doubles (float64) whenever these columns may have missing values. See `Handling Integers With Missing Values <https://www.mlflow.org/docs/latest/models.html#handling-integers-with-missing-values>`_ for more details.
+  warnings.warn(
+Downloading artifacts: 100%|████████████████████████████████████████████████████████████████████████████████████████████████| 7/7 [00:00<00:00, 670.23it/s]
+Registered model 'regression_XGBoost Regressor' already exists. Creating a new version of this model...
+Created version '5' of model 'regression_XGBoost Regressor'.
+                     Model       MAE        MSE      RMSE  R-squared
+4        XGBoost Regressor  0.476014   3.592589  1.895413   0.977335
+3  Random Forest Regressor  0.385971   4.651435  2.156719   0.970655
+0        Linear Regression  4.362830  33.814998  5.815066   0.786666
+1                    Ridge  4.362821  33.815009  5.815067   0.786666
+2                    Lasso  4.656605  37.851447  6.152353   0.761200
+Registered model 'Best_regression_Model' already exists. Creating a new version of this model...
+2025/09/23 22:41:59 WARNING mlflow.tracking._model_registry.fluent: Run with id b3faeab0cc334564b10939dd2155af45 has no artifacts at artifact path 'model', registering model based on models:/m-dc46800783f04b7ebd1641dcf95eabd1 instead
+Created version '3' of model 'Best_regression_Model'.
+{'Best Model': 'XGBoost Regressor', 'Score': 0.9773348569869995, 'Registered As': 'Best_regression_Model', 'Version': 3}
+C:\Users\cvaleti\AppData\Local\Programs\Python\Python310\lib\site-packages\mlflow\types\utils.py:452: UserWarning: Hint: Inferred schema contains integer column(s). Integer columns in Python cannot represent missing values. If your input data contains missing values at inference time, it will be encoded as floats and will cause a schema enforcement error. The best way to avoid this problem is to infer the model schema based on a realistic data sample (training dataset) that includes missing values. Alternatively, you can declare integer columns as doubles (float64) whenever these columns may have missing values. See `Handling Integers With Missing Values <https://www.mlflow.org/docs/latest/models.html#handling-integers-with-missing-values>`_ for more details.
+  warnings.warn(
+Downloading artifacts: 100%|████████████████████████████████████████████████████████████████████████████████████████████████| 7/7 [00:00<00:00, 459.36it/s]
+Successfully registered model 'clustering_KMeans'.
+Created version '1' of model 'clustering_KMeans'.
+C:\Users\cvaleti\AppData\Local\Programs\Python\Python310\lib\site-packages\mlflow\types\utils.py:452: UserWarning: Hint: Inferred schema contains integer column(s). Integer columns in Python cannot represent missing values. If your input data contains missing values at inference time, it will be encoded as floats and will cause a schema enforcement error. The best way to avoid this problem is to infer the model schema based on a realistic data sample (training dataset) that includes missing values. Alternatively, you can declare integer columns as doubles (float64) whenever these columns may have missing values. See `Handling Integers With Missing Values <https://www.mlflow.org/docs/latest/models.html#handling-integers-with-missing-values>`_ for more details.
+  warnings.warn(
+2025/09/23 23:03:25 WARNING mlflow.sklearn: Model was missing function: predict. Not logging python_function flavor!
+Downloading artifacts: 100%|████████████████████████████████████████████████████████████████████████████████████████████████| 7/7 [00:00<00:00, 221.59it/s]
+2025/09/23 23:03:28 WARNING mlflow.models.model: Failed to validate serving input example {
+  "dataframe_split": {
+    "columns": [
+      "y.... Alternatively, you can avoid passing input example and pass model signature instead when logging the model. To ensure the input example is valid prior to serving, please try calling `mlflow.models.validate_serving_input` on the model uri and serving input example. A serving input example can be generated from model input example using `mlflow.models.convert_input_example_to_serving_input` function.
+Got error: Model does not have the "python_function" flavor
+Successfully registered model 'clustering_DBSCAN'.
+Created version '1' of model 'clustering_DBSCAN'.
+    Model  Silhouette Score  Davies-Bouldin Index          WCSS
+0  KMeans          0.107763              2.918380  5.127309e+07
+1  DBSCAN         -0.483965              5.426617  3.351955e+07
+Successfully registered model 'Best_clustering_Model'.
+2025/09/23 23:03:29 WARNING mlflow.tracking._model_registry.fluent: Run with id c276d50656264328910b816933ea1038 has no artifacts at artifact path 'model', registering model based on models:/m-78171d6ed4c54560b9522b188f13895c instead
+Created version '1' of model 'Best_clustering_Model'.
+{'Best Model': 'KMeans', 'Score': 0.10776331277813221, 'Registered As': 'Best_clustering_Model', 'Version': 1}
