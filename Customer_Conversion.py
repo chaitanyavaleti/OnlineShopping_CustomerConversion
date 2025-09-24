@@ -12,11 +12,42 @@ st.set_page_config(page_title="Customer Analytics Dashboard", layout="wide")
 st.title("Customer Analytics Dashboard")
 
 st.sidebar.header("Upload or Input Data")
+
+def prepare_uploaded_df(df: pd.DataFrame, expected_cols: list) -> pd.DataFrame:
+    # If 'converted' missing, create from 'order'
+    if 'converted' not in df.columns:
+        if 'order' in df.columns:
+            df['converted'] = df['order'].apply(lambda x: 1 if x > 0 else 0)
+            warnings.warn("'converted' column was missing. Created from 'order'.")
+        else:
+            df['converted'] = 0
+            warnings.warn("'converted' missing and no 'order' found. Defaulted to 0.")
+
+    # Add missing expected columns
+    for col in expected_cols:
+        if col not in df.columns:
+            df[col] = 0  # safe default
+
+    # Keep only expected columns (drop extras)
+    df = df[expected_cols]
+    return df
+
 uploaded_file = st.sidebar.file_uploader("Upload CSV", type=["csv"])
 
 if uploaded_file:
-    df = pd.read_csv(uploaded_file)
-    st.write("Data Preview:", df.head())
+    df_orig = pd.read_csv(uploaded_file)
+
+    expected_cols = [
+        'year', 'month', 'day', 'order', 'country',
+        'page1_main_category', 'page2_clothing_model','colour', 'location',
+        'model_photography', 'price','price_2', 'page', 'converted'
+    ]
+
+    # Align dataset
+    df = prepare_uploaded_df(df_orig, expected_cols)
+
+    st.write("✅ Data after alignment:")
+    st.dataframe(df.head())
 else:
     st.warning("Please upload a CSV file to proceed.")
 
@@ -77,7 +108,7 @@ if task.startswith("Clustering"):
     cluster_model_name = "Best_clustering_Model"
     try:
         # Find the latest version tagged as Production
-        versions = client.search_model_versions(f"name='{cls_model_name}'")
+        versions = client.search_model_versions(f"name='{cluster_model_name}'")
         prod_versions = [v for v in versions if v.tags.get("stage") == "Production"]
 
         if not prod_versions:
@@ -108,7 +139,13 @@ if uploaded_file:
         df['predicted_revenue'] = reg_model.predict(df)
         st.write(df[['predicted_revenue']].head())
         # Visualize distribution
-        st.hist_chart(df['predicted_revenue'])
+        fig, ax = plt.subplots()
+        ax.hist(df['predicted_revenue'], bins=30, edgecolor="black")
+        ax.set_title("Predicted Revenue Distribution")
+        ax.set_xlabel("Revenue")
+        ax.set_ylabel("Frequency")
+
+        st.pyplot(fig)
 
     elif task.startswith("Clustering") and cluster_model:
         df['cluster'] = cluster_model.predict(df)
