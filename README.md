@@ -59,6 +59,8 @@ Open [http://localhost:8501](http://localhost:8501) in your browser.
 
 ## 📊 Example Prediction  
 
+<img width="1853" height="855" alt="image" src="https://github.com/user-attachments/assets/499ec4ef-f0ff-4818-adf0-0a20e0878915" />
+
 ---
 
 ## 🛠️ Tech Stack  
@@ -71,3 +73,4 @@ Open [http://localhost:8501](http://localhost:8501) in your browser.
 
 Chaitanya Valeti (MAE4 [AIML-C-WD-E-B18)
 Built as a Mini project for the **AIML (Artificial Intelligence & Machine Learning)** domain at GUVI (HCL Tech).
+
