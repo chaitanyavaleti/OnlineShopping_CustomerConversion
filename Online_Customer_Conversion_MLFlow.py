@@ -3,6 +3,8 @@ import mlflow.sklearn
 import pandas as pd
 import numpy as np
 from sklearn.model_selection import train_test_split
+from sklearn.feature_selection import SelectKBest, mutual_info_classif
+from sklearn.preprocessing import MinMaxScaler
 from sklearn.preprocessing import StandardScaler, OneHotEncoder
 from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
@@ -20,10 +22,35 @@ from xgboost import XGBClassifier, XGBRegressor
 from mlflow.models import infer_signature
 from sklearn.metrics import pairwise_distances_argmin_min
 from mlflow.tracking import MlflowClient
+from imblearn.over_sampling import SMOTE
+from imblearn.under_sampling import RandomUnderSampler
 
+import warnings
+warnings.filterwarnings("ignore")
 
+def create_weighted_converted(df, k=6, price_mode="normalized"):
+    df_copy = df.copy()
+    
+    # Define temporary target for conversion
+    df_copy["_temp_target"] = ((df_copy["order"] > 0) & (df_copy["price"] > 0)).astype(int)
+    y_price = df_copy["_temp_target"]
+    X_price = df_copy.drop(columns=["_temp_target"])
+    
+    # Compute mutual info fast
+    mi = mutual_info_classif(X_price.select_dtypes(include=[np.number]), y_price)
+    mi = pd.Series(mi, index=X_price.select_dtypes(include=[np.number]).columns)
+    top_features = mi.sort_values(ascending=False).head(k).index.tolist()
+    
+    # Weighted conversion score (based on MI)
+    weights = mi[top_features] / mi[top_features].sum()
+    df_copy['conversion_score'] = (df_copy[top_features] * weights).sum(axis=1)
+    
+    # Create converted column
+    df_copy['converted'] = (df_copy['conversion_score'] > df_copy['conversion_score'].median()).astype(int)
+    
+    df_copy.drop(columns=['_temp_target'], inplace=True)
+    return df_copy, top_features, weights
 
-# ========== Your evaluate_model Function ==========
 def evaluate_model(model_type, y_true=None, y_pred=None, X=None, cluster_labels=None):
     results = {}
     
@@ -64,34 +91,36 @@ def evaluate_model(model_type, y_true=None, y_pred=None, X=None, cluster_labels=
     
     return results
 
-
 # ========== Unified Pipeline ==========
-def unified_pipeline(df, task="classification", target_col=None, n_clusters=3):
+def unified_pipeline(df, task="classification", target_col=None, n_clusters=3, k_features=6):
     results = []
 
     mlflow.set_experiment("Customer Conversion Analysis for Online Shopping")
     client = MlflowClient()
 
+    if target_col is None or target_col not in df.columns:
+        print("⚡ Creating 'converted' dynamically using top K features...")
+        
+        df, top_features, feature_weights = create_weighted_converted(df,k=k_features)
+        target_col = "converted"
+        print(f"Top features selected: {top_features}")
+        print(f"Assigned weights: {feature_weights}")
+    else:
+        top_features = df.drop(columns=[target_col, "session_id"], errors="ignore").columns.tolist()
+
+
     # Feature/target split
     if task in ["classification", "regression"]:
-        if target_col is None:
-            raise ValueError("target_col must be provided for classification/regression")
-
-        if df[target_col].nunique() < 2:
-            print(f"WARNING: Target column '{target_col}' has only one unique value. Classification cannot be performed.")
-            return None
-
-        X = df.drop(columns=[target_col, "session_id", "page2_clothing_model"], errors="ignore")
+        X = df[top_features]  # only top features
         y = df[target_col]
-    else:
-        X = df.drop(columns=["session_id", "page2_clothing_model"], errors="ignore")
-        y = None
-
-    # Train-test split for supervised tasks
-    if task in ["classification", "regression"]:
+        if y.nunique() < 2:
+            print(f"⚠️ Target column '{target_col}' has only one unique value. {task} cannot be performed.")
+            return None
         X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-    else:
-        X_train, X_test, y_train, y_test = X, None, y, None
+    else:  # clustering
+        X = df[top_features]
+        X_train = X_test = X
+        y_train = y_test = None
 
     # Preprocessing
     numeric_features = X.select_dtypes(include=["int64", "float64"]).columns.tolist()
@@ -108,13 +137,12 @@ def unified_pipeline(df, task="classification", target_col=None, n_clusters=3):
     # ===== Models =====
     if task == "classification":
         models = {
-            "Logistic Regression": LogisticRegression(class_weight="balanced", max_iter=1000),
-            "Decision Tree": DecisionTreeClassifier(class_weight="balanced"),
-            "Random Forest": RandomForestClassifier(class_weight="balanced", n_estimators=200),
+            "Logistic Regression": LogisticRegression( max_iter=1000 , class_weight="balanced"),
+            "Decision Tree": DecisionTreeClassifier(),
+            "Random Forest": RandomForestClassifier( n_estimators=200),
             "XGBoost": XGBClassifier(eval_metric="logloss", use_label_encoder=False),
             "Neural Network": MLPClassifier(hidden_layer_sizes=(50,50), max_iter=500)
         }
-
     elif task == "regression":
         models = {
             "Linear Regression": LinearRegression(),
@@ -123,11 +151,10 @@ def unified_pipeline(df, task="classification", target_col=None, n_clusters=3):
             "Random Forest Regressor": RandomForestRegressor(n_estimators=200),
             "XGBoost Regressor": XGBRegressor(eval_metric="rmse")
         }
-
     elif task == "clustering":
         models = {
-            "KMeans": KMeans(n_clusters=n_clusters, random_state=42),
-            "DBSCAN": DBSCAN(eps=0.5, min_samples=5)
+            "KMeans": KMeans(n_clusters=n_clusters, n_init=50, max_iter=500,random_state=42),
+            "DBSCAN": DBSCAN(eps=0.5, min_samples=5, metric='euclidean')
         }
 
     else:
@@ -139,7 +166,6 @@ def unified_pipeline(df, task="classification", target_col=None, n_clusters=3):
         pipe = Pipeline([("preprocessor", preprocessor), ("model", model)])
         with mlflow.start_run(run_name=f"{task}_{name}") as run:
             run_id = run.info.run_id
-            
             if task == "classification":
                 pipe.fit(X_train, y_train)
                 y_pred = pipe.predict(X_test)
@@ -150,15 +176,15 @@ def unified_pipeline(df, task="classification", target_col=None, n_clusters=3):
                 # Take a small sample as input_example
                 input_example = X_test.iloc[:5]
 
-                if hasattr(model, "predict_proba"):
-                    y_proba = pipeline.predict_proba(X_test)[:,1]
-                else:  # for models that don't support predict_proba
-                    y_proba = pipeline.decision_function(X_test)
+                try:
+                    y_proba = pipe.predict_proba(X_test)[:,1]
+                    auc = roc_auc_score(y_test, y_proba)
+                except:
+                    auc = np.nan
 
-                auc = roc_auc_score(y_test, y_proba) if y_proba is not None else np.nan
                 mlflow.log_metric("ROC-AUC", auc)
                 mlflow.sklearn.log_model(pipe, name="model", registered_model_name=f"{task}_{name}", signature=signature, input_example=input_example)
-                run_info.append((name, auc, run_id))
+                run_info.append((name, auc, run_id, {"ROC-AUC": auc}))
                 results.append({"Model": name, "ROC-AUC": auc})
 
             elif task == "regression":
@@ -173,27 +199,28 @@ def unified_pipeline(df, task="classification", target_col=None, n_clusters=3):
                 metrics = evaluate_model("regression", y_true=y_test, y_pred=y_pred)
                 mlflow.log_metrics(metrics)
                 mlflow.sklearn.log_model(pipe, name="model", registered_model_name=f"{task}_{name}", signature=signature, input_example=input_example)
-                run_info.append((name, metrics["R-squared"], run_id, metrics))
+                run_info.append((name,  metrics["R-squared"], run_id, metrics))  # include metrics dict
                 results.append({"Model": name, **metrics})
 
             elif task == "clustering":
+                # Fit the pipeline
                 cluster_labels = pipe.fit_predict(X)
-                # Infer signature
-                signature = infer_signature(X_train, cluster_labels)
-
-                # Take a small sample as input_example
-                input_example = X_train.iloc[:5]
-
-                if len(set(cluster_labels)) > 1:
-                    metrics = evaluate_model("clustering", X=X.values, cluster_labels=cluster_labels)
-                    score = metrics["Silhouette Score"]
+                
+                if categorical_features:
+                    encoder = OneHotEncoder(sparse_output=False, handle_unknown="ignore")
+                    X_cat = encoder.fit_transform(X[categorical_features])
+                    X_proc = np.hstack([X[numeric_features].values, X_cat])
+                    input_cols = numeric_features + list(enc.get_feature_names_out(categorical_features))
                 else:
-                    metrics = {"Silhouette Score": np.nan, "Davies-Bouldin Index": np.nan, "WCSS": np.nan}
-                    score = np.nan
+                    X_proc = X[numeric_features].values
+                    input_cols = numeric_features
 
+                signature = infer_signature(pd.DataFrame(X_proc, columns=input_cols), cluster_labels)
+                input_example = pd.DataFrame(X_proc[:5], columns=input_cols)
+                metrics = evaluate_model("clustering", X=X_proc, cluster_labels=cluster_labels) if len(set(cluster_labels)) > 1 else {"Silhouette Score": np.nan, "Davies-Bouldin Index": np.nan, "WCSS": np.nan}
                 mlflow.log_metrics(metrics)
-                mlflow.sklearn.log_model(pipe, name="model", registered_model_name=f"{task}_{name}", signature=signature, input_example=input_example)
-                run_info.append((name, score, run_id, metrics))
+                mlflow.sklearn.log_model(pipe, name="model", registered_model_name=f"Best_clustering_Model", signature=signature, input_example=input_example)
+                run_info.append((name, metrics.get("Silhouette Score", np.nan), run_id, metrics))  # clustering score optional
                 results.append({"Model": name, **metrics})
 
     # Convert to DataFrame & Rank
@@ -203,7 +230,7 @@ def unified_pipeline(df, task="classification", target_col=None, n_clusters=3):
 
     if task == "classification":
         results_df = results_df.sort_values(by="ROC-AUC", ascending=False)
-        best_name, best_score, best_run_id = best_model
+        best_name, best_score, best_run_id, best_metrics = best_model
         tags = {"stage": "Production", "roc_auc": str(best_score), "model_name": best_name}
     elif task == "regression":
         results_df = results_df.sort_values(by="R-squared", ascending=False)
@@ -220,7 +247,10 @@ def unified_pipeline(df, task="classification", target_col=None, n_clusters=3):
     # Register best model
     model_uri = f"runs:/{best_run_id}/model"
     registered_model_name = f"Best_{task}_Model"
-    mv = mlflow.register_model(model_uri, registered_model_name)
+    try:
+        mv = mlflow.register_model(model_uri, registered_model_name)
+    except:
+        mv = client.get_latest_versions(registered_model_name)[-1]
 
     for key, value in tags.items():
         client.set_model_version_tag(
@@ -231,10 +261,9 @@ def unified_pipeline(df, task="classification", target_col=None, n_clusters=3):
         )
 
     return {"Best Model": best_name, "Score": best_score, "Registered As": registered_model_name, "Version": mv.version}
-    
-train = pd.read_csv("train_data.csv")
-train["converted"] = train["order"].apply(lambda x: 1 if x > 0 else 0)
 
+
+train = pd.read_csv("train_data.csv")
 
 best_cls = unified_pipeline(train, task="classification", target_col="converted")
 print(best_cls)

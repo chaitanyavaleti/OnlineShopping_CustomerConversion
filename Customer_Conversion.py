@@ -3,55 +3,60 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
+from sklearn.preprocessing import StandardScaler, OneHotEncoder
+from sklearn.compose import ColumnTransformer
+from sklearn.pipeline import Pipeline
 from mlflow.tracking import MlflowClient
 import mlflow.pyfunc
-from mlflow.exceptions import MlflowException
+from sklearn.feature_selection import mutual_info_classif
 import warnings
+
+warnings.filterwarnings("ignore")
 
 st.set_page_config(page_title="Customer Analytics Dashboard", layout="wide")
 st.title("Customer Analytics Dashboard")
-
 st.sidebar.header("Upload or Input Data")
 
-def prepare_uploaded_df(df: pd.DataFrame, expected_cols: list) -> pd.DataFrame:
-    # If 'converted' missing, create from 'order'
-    if 'converted' not in df.columns:
-        if 'order' in df.columns:
-            df['converted'] = df['order'].apply(lambda x: 1 if x > 0 else 0)
-            warnings.warn("'converted' column was missing. Created from 'order'.")
-        else:
-            df['converted'] = 0
-            warnings.warn("'converted' missing and no 'order' found. Defaulted to 0.")
+# ----- Weighted Conversion -----
+def create_weighted_converted(df, k=6):
+    df_copy = df.copy()
+    df_copy["_temp_target"] = ((df_copy.get("order", 0) > 0) & (df_copy.get("price", 0) > 0)).astype(int)
+    y = df_copy["_temp_target"]
+    X_num = df_copy.select_dtypes(include=[np.number]).drop(columns=["_temp_target"], errors="ignore")
+    mi = mutual_info_classif(X_num.fillna(0), y)
+    mi = pd.Series(mi, index=X_num.columns)
+    top_features = mi.sort_values(ascending=False).head(k).index.tolist()
+    weights = mi[top_features] / mi[top_features].sum()
+    df_copy['conversion_score'] = (df_copy[top_features] * weights).sum(axis=1)
+    df_copy['converted'] = (df_copy['conversion_score'] > df_copy['conversion_score'].median()).astype(int)
+    df_copy.drop(columns=['_temp_target'], inplace=True)
+    return df_copy, top_features, weights
 
-    # Add missing expected columns
-    for col in expected_cols:
-        if col not in df.columns:
-            df[col] = 0  # safe default
+# ----- Align dataframe with MLflow model signature -----
+def align_with_signature(model, df):
+    input_schema = model.metadata.get_input_schema()
+    expected_cols = [f.name for f in input_schema.inputs]
+    df_aligned = df.reindex(columns=expected_cols, fill_value=0)
+    return df_aligned
 
-    # Keep only expected columns (drop extras)
-    df = df[expected_cols]
-    return df
-
+# ----- File Upload -----
 uploaded_file = st.sidebar.file_uploader("Upload CSV", type=["csv"])
 
 if uploaded_file:
     df_orig = pd.read_csv(uploaded_file)
+    st.write("✅ Raw Uploaded Data:")
+    st.dataframe(df_orig.head())
 
-    expected_cols = [
-        'year', 'month', 'day', 'order', 'country',
-        'page1_main_category', 'page2_clothing_model','colour', 'location',
-        'model_photography', 'price','price_2', 'page', 'converted'
-    ]
+    # Dynamically create 'converted' if missing
+    if 'converted' not in df_orig.columns:
+        df_orig, top_features, feature_weights = create_weighted_converted(df_orig, k=6)
+        st.success(f"'converted' column created dynamically using top features: {top_features}")
 
-    # Align dataset
-    df = prepare_uploaded_df(df_orig, expected_cols)
-
-    st.write("✅ Data after alignment:")
-    st.dataframe(df.head())
 else:
     st.warning("Please upload a CSV file to proceed.")
+    st.stop()
 
-
+# ----- Select Task -----
 task = st.sidebar.selectbox(
     "Select Task",
     ["Classification: Conversion Prediction",
@@ -60,120 +65,57 @@ task = st.sidebar.selectbox(
 )
 
 client = MlflowClient()
+model = None
 
-if task.startswith("Classification"):
-    cls_model_name = "Best_classification_Model"
+# ----- Load MLflow model -----
+if "Classification" in task:
+    model_name = "Best_classification_Model"
+elif "Regression" in task:
+    model_name = "Best_regression_Model"
+else:
+    model_name = "Best_clustering_Model"
+
+try:
+    versions = client.search_model_versions(f"name='{model_name}'")
+    prod_versions = [v for v in versions if v.tags.get("stage") == "Production"]
+    if not prod_versions:
+        st.error("No Production model found!")
+    latest_prod_version = max(prod_versions, key=lambda v: int(v.version))
+    model = mlflow.pyfunc.load_model(f"models:/{model_name}/{latest_prod_version.version}")
+    st.success(f"Loaded model: {model_name}")
+except Exception as e:
+    st.error(f"Failed to load model: {e}")
+    st.stop()
+
+# ----- Predictions -----
+if model:
     try:
-        # Find the latest version tagged as Production
-        versions = client.search_model_versions(f"name='{cls_model_name}'")
-        prod_versions = [v for v in versions if v.tags.get("stage") == "Production"]
+        X_input = align_with_signature(model, df_orig)
+        if "Classification" in task:
+            df_orig['predicted_conversion'] = model.predict(X_input)
+            st.write(df_orig[['predicted_conversion']].head())
+            st.bar_chart(df_orig['predicted_conversion'].value_counts())
+        elif "Regression" in task:
+            df_orig['predicted_revenue'] = model.predict(X_input)
+            st.write(df_orig[['predicted_revenue']].head())
+            st.bar_chart(df_orig['predicted_revenue'])
+        else:  # Clustering
+            df_orig['cluster'] = model.predict(X_input)
+            st.write(df_orig[['cluster']].head())
+            st.bar_chart(df_orig['cluster'].value_counts())
+    except Exception as e:
+        st.error(f"Prediction failed: {e}")
 
-        if not prod_versions:
-            raise RuntimeError("No model version tagged as Production!")
-
-        # Pick latest Production version
-        latest_prod_version = max(prod_versions, key=lambda v: int(v.version))
-        cls_model = mlflow.pyfunc.load_model(f"models:/{cls_model_name}/{latest_prod_version.version}")
-        st.success(f"Loaded model: {cls_model_name}")
-    except MlflowException as e:
-        cls_model = None
-        warnings.warn(f"Model '{cls_model_name}' not found in MLflow. Skipping classification predictions.")
-    except RuntimeError as e:
-        cls_model = None
-        warnings.warn(f"RuntimeError: No version tagged as Production for '{cls_model_name}'. Skipping classification.\nDetails: {e}")
-
-if task.startswith("Regression"):
-    reg_model_name = "Best_regression_Model"
-    try:
-        # Find the latest version tagged as Production
-        versions = client.search_model_versions(f"name='{reg_model_name}'")
-        prod_versions = [v for v in versions if v.tags.get("stage") == "Production"]
-
-        if not prod_versions:
-            raise RuntimeError("No model version tagged as Production!")
-
-        # Pick latest Production version
-        latest_prod_version = max(prod_versions, key=lambda v: int(v.version))
-        reg_model  = mlflow.pyfunc.load_model(f"models:/{reg_model_name}/{latest_prod_version.version}")
-        st.success(f"Loaded model: {reg_model_name}")
-    except MlflowException as e:
-        reg_model = None
-        warnings.warn(f"MLflowException: Could not load '{reg_model_name}' in Production stage. Skipping Regression.\nDetails: {e}")
-    except RuntimeError as e:
-        reg_model = None
-        warnings.warn(f"RuntimeError: No version tagged as Production for '{reg_model_name}'. Skipping Regression.\nDetails: {e}")
-    
-
-if task.startswith("Clustering"):
-    cluster_model_name = "Best_clustering_Model"
-    try:
-        # Find the latest version tagged as Production
-        versions = client.search_model_versions(f"name='{cluster_model_name}'")
-        prod_versions = [v for v in versions if v.tags.get("stage") == "Production"]
-
-        if not prod_versions:
-            raise RuntimeError("No model version tagged as Production!")
-
-        # Pick latest Production version
-        latest_prod_version = max(prod_versions, key=lambda v: int(v.version))
-        cluster_model  = mlflow.pyfunc.load_model(f"models:/{cluster_model_name}/{latest_prod_version.version}")
-        st.success(f"Loaded model: {cluster_model_name}")
-    except MlflowException as e:
-        cluster_model = None
-        warnings.warn(f"MLflowException: Could not load '{cluster_model_name}' in Production stage. Skipping Regression.\nDetails: {e}")
-    except RuntimeError as e:
-        cluster_model = None
-        warnings.warn(f"RuntimeError: No version tagged as Production for '{cluster_model_name}'. Skipping Regression.\nDetails: {e}")
-
-
-if uploaded_file:
-    st.subheader("Model Results")
-
-    if task.startswith("Classification") and cls_model:
-        df['predicted_conversion'] = cls_model.predict(df)
-        st.write(df[['predicted_conversion']].head())
-        # Show proportion
-        st.bar_chart(df['predicted_conversion'].value_counts())
-
-    elif task.startswith("Regression") and reg_model:
-        df['predicted_revenue'] = reg_model.predict(df)
-        st.write(df[['predicted_revenue']].head())
-        # Visualize distribution
-        fig, ax = plt.subplots()
-        ax.hist(df['predicted_revenue'], bins=30, edgecolor="black")
-        ax.set_title("Predicted Revenue Distribution")
-        ax.set_xlabel("Revenue")
-        ax.set_ylabel("Frequency")
-
-        st.pyplot(fig)
-
-    elif task.startswith("Clustering") and cluster_model:
-        df['cluster'] = cluster_model.predict(df)
-        st.write(df[['cluster']].head())
-        # Cluster counts
-        st.bar_chart(df['cluster'].value_counts())
-        # Optional: PCA for 2D visualization
-        from sklearn.decomposition import PCA
-        pca = PCA(n_components=2)
-        pca_result = pca.fit_transform(df.select_dtypes(include=np.number))
-        df['pca_1'] = pca_result[:,0]
-        df['pca_2'] = pca_result[:,1]
-        st.scatter_chart(df[['pca_1','pca_2','cluster']])
-    else:
-        print("skipped due to missing model or task mismatch.")
-
-
-if uploaded_file:
-    st.subheader("Exploratory Data Analysis")
-    numeric_cols = df.select_dtypes(include=np.number).columns.tolist()
+# ----- Exploratory Data Analysis -----
+st.subheader("Exploratory Data Analysis")
+numeric_cols = df_orig.select_dtypes(include=np.number).columns.tolist()
+if numeric_cols:
     col = st.selectbox("Select numeric column for visualization", numeric_cols)
-    
     st.write("Histogram")
     fig, ax = plt.subplots()
-    sns.histplot(df[col], kde=True, ax=ax)
+    sns.histplot(df_orig[col], kde=True, ax=ax)
     st.pyplot(fig)
-    
     st.write("Boxplot")
     fig, ax = plt.subplots()
-    sns.boxplot(x=df[col], ax=ax)
+    sns.boxplot(x=df_orig[col], ax=ax)
     st.pyplot(fig)

@@ -1,60 +1,87 @@
-WARNING: Target column 'converted' has only one unique value. Classification cannot be performed.
-None
-C:\Users\cvaleti\AppData\Local\Programs\Python\Python310\lib\site-packages\mlflow\types\utils.py:452: UserWarning: Hint: Inferred schema contains integer column(s). Integer columns in Python cannot represent missing values. If your input data contains missing values at inference time, it will be encoded as floats and will cause a schema enforcement error. The best way to avoid this problem is to infer the model schema based on a realistic data sample (training dataset) that includes missing values. Alternatively, you can declare integer columns as doubles (float64) whenever these columns may have missing values. See `Handling Integers With Missing Values <https://www.mlflow.org/docs/latest/models.html#handling-integers-with-missing-values>`_ for more details.
-  warnings.warn(
+⚡ Creating 'converted' dynamically using top K features...
+Top features selected: ['country', 'year', 'price_2', 'model_photography', 'page', 'page1_main_category']
+Assigned weights: country                0.261003
+year                   0.194823
+price_2                0.194745
+model_photography      0.185480
+page                   0.108228
+page1_main_category    0.055721
+dtype: float64
+Downloading artifacts: 100%|████████████████████████████████████████████████████████████████████████████████████████████████| 7/7 [00:00<00:00, 437.79it/s]
+Registered model 'classification_Logistic Regression' already exists. Creating a new version of this model...
+Created version '10' of model 'classification_Logistic Regression'.
+Downloading artifacts: 100%|████████████████████████████████████████████████████████████████████████████████████████████████| 7/7 [00:00<00:00, 737.73it/s]
+Registered model 'classification_Decision Tree' already exists. Creating a new version of this model...
+Created version '10' of model 'classification_Decision Tree'.
+Downloading artifacts: 100%|████████████████████████████████████████████████████████████████████████████████████████████████| 7/7 [00:00<00:00, 439.15it/s]
+Registered model 'classification_Random Forest' already exists. Creating a new version of this model...
+Created version '10' of model 'classification_Random Forest'.
+Downloading artifacts: 100%|█████████████████████████████████████████████████████████████████████████████████████████████████████████| 7/7 [00:00<?, ?it/s]
+Registered model 'classification_XGBoost' already exists. Creating a new version of this model...
+Created version '10' of model 'classification_XGBoost'.
+Downloading artifacts: 100%|█████████████████████████████████████████████████████████████████████████████████████████████████████████| 7/7 [00:00<?, ?it/s]
+Registered model 'classification_Neural Network' already exists. Creating a new version of this model...
+Created version '10' of model 'classification_Neural Network'.
+                 Model   ROC-AUC
+1        Decision Tree  1.000000
+2        Random Forest  1.000000
+4       Neural Network  1.000000
+3              XGBoost  1.000000
+0  Logistic Regression  0.999434
+Registered model 'Best_classification_Model' already exists. Creating a new version of this model...
+2025/10/04 17:20:01 WARNING mlflow.tracking._model_registry.fluent: Run with id cc1dd778bf484ce086f465fb79ed478a has no artifacts at artifact path 'model', registering model based on models:/m-d4fba23b9bf641c59522693d3057723d instead
+Created version '10' of model 'Best_classification_Model'.
+{'Best Model': 'Decision Tree', 'Score': 1.0, 'Registered As': 'Best_classification_Model', 'Version': 10}
 Downloading artifacts: 100%|█████████████████████████████████████████████████████████████████████████████████████████████████████████| 7/7 [00:00<?, ?it/s]
 Registered model 'regression_Linear Regression' already exists. Creating a new version of this model...
-Created version '5' of model 'regression_Linear Regression'.
-C:\Users\cvaleti\AppData\Local\Programs\Python\Python310\lib\site-packages\mlflow\types\utils.py:452: UserWarning: Hint: Inferred schema contains integer column(s). Integer columns in Python cannot represent missing values. If your input data contains missing values at inference time, it will be encoded as floats and will cause a schema enforcement error. The best way to avoid this problem is to infer the model schema based on a realistic data sample (training dataset) that includes missing values. Alternatively, you can declare integer columns as doubles (float64) whenever these columns may have missing values. See `Handling Integers With Missing Values <https://www.mlflow.org/docs/latest/models.html#handling-integers-with-missing-values>`_ for more details.
-  warnings.warn(
-Downloading artifacts: 100%|█████████████████████████████████████████████████████████████████████████████████████████████████████████| 7/7 [00:00<?, ?it/s]
+Created version '14' of model 'regression_Linear Regression'.
+Downloading artifacts: 100%|████████████████████████████████████████████████████████████████████████████████████████████████| 7/7 [00:00<00:00, 438.32it/s]
 Registered model 'regression_Ridge' already exists. Creating a new version of this model...
-Created version '5' of model 'regression_Ridge'.
-C:\Users\cvaleti\AppData\Local\Programs\Python\Python310\lib\site-packages\mlflow\types\utils.py:452: UserWarning: Hint: Inferred schema contains integer column(s). Integer columns in Python cannot represent missing values. If your input data contains missing values at inference time, it will be encoded as floats and will cause a schema enforcement error. The best way to avoid this problem is to infer the model schema based on a realistic data sample (training dataset) that includes missing values. Alternatively, you can declare integer columns as doubles (float64) whenever these columns may have missing values. See `Handling Integers With Missing Values <https://www.mlflow.org/docs/latest/models.html#handling-integers-with-missing-values>`_ for more details.
-  warnings.warn(
-Downloading artifacts: 100%|████████████████████████████████████████████████████████████████████████████████████████████████| 7/7 [00:00<00:00, 446.59it/s]
+Created version '14' of model 'regression_Ridge'.
+Downloading artifacts: 100%|████████████████████████████████████████████████████████████████████████████████████████████████| 7/7 [00:00<00:00, 436.58it/s]
 Registered model 'regression_Lasso' already exists. Creating a new version of this model...
-Created version '5' of model 'regression_Lasso'.
-C:\Users\cvaleti\AppData\Local\Programs\Python\Python310\lib\site-packages\mlflow\types\utils.py:452: UserWarning: Hint: Inferred schema contains integer column(s). Integer columns in Python cannot represent missing values. If your input data contains missing values at inference time, it will be encoded as floats and will cause a schema enforcement error. The best way to avoid this problem is to infer the model schema based on a realistic data sample (training dataset) that includes missing values. Alternatively, you can declare integer columns as doubles (float64) whenever these columns may have missing values. See `Handling Integers With Missing Values <https://www.mlflow.org/docs/latest/models.html#handling-integers-with-missing-values>`_ for more details.
-  warnings.warn(
-Downloading artifacts: 100%|█████████████████████████████████████████████████████████████████████████████████████████████████| 7/7 [00:00<00:00, 72.38it/s]
+Created version '14' of model 'regression_Lasso'.
+Downloading artifacts: 100%|█████████████████████████████████████████████████████████████████████████████████████████████████████████| 7/7 [00:00<?, ?it/s]
 Registered model 'regression_Random Forest Regressor' already exists. Creating a new version of this model...
-Created version '5' of model 'regression_Random Forest Regressor'.
-C:\Users\cvaleti\AppData\Local\Programs\Python\Python310\lib\site-packages\mlflow\types\utils.py:452: UserWarning: Hint: Inferred schema contains integer column(s). Integer columns in Python cannot represent missing values. If your input data contains missing values at inference time, it will be encoded as floats and will cause a schema enforcement error. The best way to avoid this problem is to infer the model schema based on a realistic data sample (training dataset) that includes missing values. Alternatively, you can declare integer columns as doubles (float64) whenever these columns may have missing values. See `Handling Integers With Missing Values <https://www.mlflow.org/docs/latest/models.html#handling-integers-with-missing-values>`_ for more details.
-  warnings.warn(
-Downloading artifacts: 100%|████████████████████████████████████████████████████████████████████████████████████████████████| 7/7 [00:00<00:00, 670.23it/s]
+Created version '14' of model 'regression_Random Forest Regressor'.
+Downloading artifacts: 100%|████████████████████████████████████████████████████████████████████████████████████████████████| 7/7 [00:00<00:00, 848.34it/s]
 Registered model 'regression_XGBoost Regressor' already exists. Creating a new version of this model...
-Created version '5' of model 'regression_XGBoost Regressor'.
+Created version '14' of model 'regression_XGBoost Regressor'.
                      Model       MAE        MSE      RMSE  R-squared
-4        XGBoost Regressor  0.476014   3.592589  1.895413   0.977335
-3  Random Forest Regressor  0.385971   4.651435  2.156719   0.970655
-0        Linear Regression  4.362830  33.814998  5.815066   0.786666
-1                    Ridge  4.362821  33.815009  5.815067   0.786666
+0        Linear Regression  0.000643   0.000001  0.001050   1.000000
+3  Random Forest Regressor  0.000138   0.000502  0.022401   0.999997
+1                    Ridge  0.013063   0.001386  0.037234   0.999991
+4        XGBoost Regressor  0.308660   0.120993  0.347840   0.999237
 2                    Lasso  4.656605  37.851447  6.152353   0.761200
 Registered model 'Best_regression_Model' already exists. Creating a new version of this model...
-2025/09/23 22:41:59 WARNING mlflow.tracking._model_registry.fluent: Run with id b3faeab0cc334564b10939dd2155af45 has no artifacts at artifact path 'model', registering model based on models:/m-dc46800783f04b7ebd1641dcf95eabd1 instead
-Created version '3' of model 'Best_regression_Model'.
-{'Best Model': 'XGBoost Regressor', 'Score': 0.9773348569869995, 'Registered As': 'Best_regression_Model', 'Version': 3}
-C:\Users\cvaleti\AppData\Local\Programs\Python\Python310\lib\site-packages\mlflow\types\utils.py:452: UserWarning: Hint: Inferred schema contains integer column(s). Integer columns in Python cannot represent missing values. If your input data contains missing values at inference time, it will be encoded as floats and will cause a schema enforcement error. The best way to avoid this problem is to infer the model schema based on a realistic data sample (training dataset) that includes missing values. Alternatively, you can declare integer columns as doubles (float64) whenever these columns may have missing values. See `Handling Integers With Missing Values <https://www.mlflow.org/docs/latest/models.html#handling-integers-with-missing-values>`_ for more details.
-  warnings.warn(
-Downloading artifacts: 100%|████████████████████████████████████████████████████████████████████████████████████████████████| 7/7 [00:00<00:00, 459.36it/s]
-Successfully registered model 'clustering_KMeans'.
-Created version '1' of model 'clustering_KMeans'.
-C:\Users\cvaleti\AppData\Local\Programs\Python\Python310\lib\site-packages\mlflow\types\utils.py:452: UserWarning: Hint: Inferred schema contains integer column(s). Integer columns in Python cannot represent missing values. If your input data contains missing values at inference time, it will be encoded as floats and will cause a schema enforcement error. The best way to avoid this problem is to infer the model schema based on a realistic data sample (training dataset) that includes missing values. Alternatively, you can declare integer columns as doubles (float64) whenever these columns may have missing values. See `Handling Integers With Missing Values <https://www.mlflow.org/docs/latest/models.html#handling-integers-with-missing-values>`_ for more details.
-  warnings.warn(
-2025/09/23 23:03:25 WARNING mlflow.sklearn: Model was missing function: predict. Not logging python_function flavor!
-Downloading artifacts: 100%|████████████████████████████████████████████████████████████████████████████████████████████████| 7/7 [00:00<00:00, 221.59it/s]
-2025/09/23 23:03:28 WARNING mlflow.models.model: Failed to validate serving input example {
+2025/10/04 17:27:57 WARNING mlflow.tracking._model_registry.fluent: Run with id a8a96fc07ba94663a5088aa231895958 has no artifacts at artifact path 'model', registering model based on models:/m-62bbefcd93354f4a888fbd0ad15f7e3f instead
+Created version '21' of model 'Best_regression_Model'.
+{'Best Model': 'Linear Regression', 'Score': 0.9999999930470421, 'Registered As': 'Best_regression_Model', 'Version': 21}
+⚡ Creating 'converted' dynamically using top K features...
+Top features selected: ['country', 'year', 'price_2', 'model_photography', 'page', 'page1_main_category']
+Assigned weights: country                0.269494
+year                   0.196304
+price_2                0.187410
+model_photography      0.184351
+page                   0.106466
+page1_main_category    0.055976
+dtype: float64
+Downloading artifacts: 100%|████████████████████████████████████████████████████████████████████████████████████████████████| 7/7 [00:00<00:00, 525.69it/s]
+Registered model 'Best_clustering_Model' already exists. Creating a new version of this model...
+Created version '4' of model 'Best_clustering_Model'.
+2025/10/04 17:51:53 WARNING mlflow.sklearn: Model was missing function: predict. Not logging python_function flavor!
+Downloading artifacts: 100%|████████████████████████████████████████████████████████████████████████████████████████████████| 7/7 [00:00<00:00, 440.57it/s]
+2025/10/04 17:51:57 WARNING mlflow.models.model: Failed to validate serving input example {
   "dataframe_split": {
     "columns": [
-      "y.... Alternatively, you can avoid passing input example and pass model signature instead when logging the model. To ensure the input example is valid prior to serving, please try calling `mlflow.models.validate_serving_input` on the model uri and serving input example. A serving input example can be generated from model input example using `mlflow.models.convert_input_example_to_serving_input` function.
+      "c.... Alternatively, you can avoid passing input example and pass model signature instead when logging the model. To ensure the input example is valid prior to serving, please try calling `mlflow.models.validate_serving_input` on the model uri and serving input example. A serving input example can be generated from model input example using `mlflow.models.convert_input_example_to_serving_input` function.
 Got error: Model does not have the "python_function" flavor
-Successfully registered model 'clustering_DBSCAN'.
-Created version '1' of model 'clustering_DBSCAN'.
+Registered model 'Best_clustering_Model' already exists. Creating a new version of this model...
+Created version '5' of model 'Best_clustering_Model'.
     Model  Silhouette Score  Davies-Bouldin Index          WCSS
-0  KMeans          0.107763              2.918380  5.127309e+07
-1  DBSCAN         -0.483965              5.426617  3.351955e+07
-Successfully registered model 'Best_clustering_Model'.
-2025/09/23 23:03:29 WARNING mlflow.tracking._model_registry.fluent: Run with id c276d50656264328910b816933ea1038 has no artifacts at artifact path 'model', registering model based on models:/m-78171d6ed4c54560b9522b188f13895c instead
-Created version '1' of model 'Best_clustering_Model'.
-{'Best Model': 'KMeans', 'Score': 0.10776331277813221, 'Registered As': 'Best_clustering_Model', 'Version': 1}
+0  KMeans          0.060359              6.804716  6.960308e+06
+1  DBSCAN          0.011740              2.781327  3.644669e+06
+Registered model 'Best_clustering_Model' already exists. Creating a new version of this model...
+2025/10/04 17:52:01 WARNING mlflow.tracking._model_registry.fluent: Run with id d7504960c80d4faa97787af33eca0065 has no artifacts at artifact path 'model', registering model based on models:/m-f53136326295437a9316b144bf1fec40 instead
+Created version '6' of model 'Best_clustering_Model'.
+{'Best Model': 'KMeans', 'Score': 0.060358717544015915, 'Registered As': 'Best_clustering_Model', 'Version': 6}
