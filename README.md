@@ -67,6 +67,56 @@ Open [http://localhost:8501](http://localhost:8501) in your browser.
 
 ---
 
+# Customer Segmentation Analysis
+
+This project segments customers based on their online behavior patterns, including browsing, product interactions, and spending. Each cluster represents a distinct group of customers, enabling targeted marketing campaigns and personalized product recommendations.
+
+---
+
+## Cluster Interpretations
+
+### Cluster 0
+- **Average Spending (`price_2`)**: 1.59 → Moderate spending  
+- **Preferred Category (`page1_main_category`)**: 4  
+- **Engagement (`model_photography`)**: 1.73 → Moderate engagement  
+- **Number of Customers**: 15,522 → Medium-sized group  
+
+### Cluster 1
+- **Average Spending (`price_2`)**: 2.0 → Highest spending → **high-value buyers**  
+- **Preferred Category (`page1_main_category`)**: 1  
+- **Engagement (`model_photography`)**: 1.0 → Lower interaction, possibly focused buyers  
+- **Number of Customers**: 36,780 → Large group  
+
+### Cluster 2
+- **Average Spending (`price_2`)**: 1.53 → Moderate spending  
+- **Preferred Category (`page1_main_category`)**: 4 → Same as Cluster 0  
+- **Engagement (`model_photography`)**: 2.0 → High interaction → engaged niche shoppers  
+- **Number of Customers**: 20,310 → Medium-sized group  
+
+### Cluster 3
+- **Average Spending (`price_2`)**: 1.0 → Lowest spending → **browsers / low-value users**  
+- **Preferred Category (`page1_main_category`)**: 2 → Different interest  
+- **Engagement (`model_photography`)**: 1.0 → Low interaction  
+- **Number of Customers**: 44,534 → Largest cluster  
+
+### Cluster 4
+- **Average Spending (`price_2`)**: 1.52 → Moderate spending  
+- **Preferred Category (`page1_main_category`)**: 1 → Same as Cluster 1  
+- **Engagement (`model_photography`)**: 1.19 → Slightly above minimal interaction  
+- **Number of Customers**: 15,233 → Medium-sized group  
+
+---
+
+## Key Inferences
+
+- **High-value buyers**: Cluster 1 (highest average spending) → prioritize premium offers and loyalty programs.  
+- **Low-value / browsers**: Cluster 3 (lowest spending, largest group) → target with awareness campaigns and engagement initiatives.  
+- **Engaged niche shoppers**: Cluster 2 → likely to interact with product pages/models; good candidates for targeted cross-selling.  
+- **Category preferences**: Categories 1, 2, and 4 dominate across clusters → can guide category-specific marketing campaigns.  
+- **Cluster sizes**: Large clusters represent general audience; smaller clusters indicate specialized or high-value segments for focused campaigns.  
+
+---
+
 ## 🛠️ Tech Stack  
 - **Python 3.9+**  
 - **Scikit-learn, XGBoost** (ML models)  
@@ -77,6 +127,7 @@ Open [http://localhost:8501](http://localhost:8501) in your browser.
 
 Chaitanya Valeti (MAE4 [AIML-C-WD-E-B18)
 Built as a Mini project for the **AIML (Artificial Intelligence & Machine Learning)** domain at GUVI (HCL Tech).
+
 
 
 
