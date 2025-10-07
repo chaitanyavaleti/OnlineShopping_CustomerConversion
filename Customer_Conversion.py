@@ -20,9 +20,13 @@ st.sidebar.header("Upload or Input Data")
 # ----- Weighted Conversion -----
 def create_weighted_converted(df, k=6):
     df_copy = df.copy()
+    drop_cols = ["order", "price"]
+    df_features = df_copy.drop(columns=drop_cols, errors='ignore')
+    
     df_copy["_temp_target"] = ((df_copy.get("order", 0) > 0) & (df_copy.get("price", 0) > 0)).astype(int)
     y = df_copy["_temp_target"]
-    X_num = df_copy.select_dtypes(include=[np.number]).drop(columns=["_temp_target"], errors="ignore")
+    X_num = df_features.select_dtypes(include=[np.number]).drop(columns=["_temp_target"], errors="ignore")
+    
     mi = mutual_info_classif(X_num.fillna(0), y)
     mi = pd.Series(mi, index=X_num.columns)
     top_features = mi.sort_values(ascending=False).head(k).index.tolist()
@@ -93,15 +97,15 @@ if model:
         X_input = align_with_signature(model, df_orig)
         if "Classification" in task:
             df_orig['predicted_conversion'] = model.predict(X_input)
-            st.write(df_orig[['predicted_conversion']].head())
+            st.write(df_orig[['predicted_conversion']])
             st.bar_chart(df_orig['predicted_conversion'].value_counts())
         elif "Regression" in task:
             df_orig['predicted_revenue'] = model.predict(X_input)
-            st.write(df_orig[['predicted_revenue']].head())
+            st.write(df_orig[['predicted_revenue']])
             st.bar_chart(df_orig['predicted_revenue'])
         else:  # Clustering
             df_orig['cluster'] = model.predict(X_input)
-            st.write(df_orig[['cluster']].head())
+            st.write(df_orig[['cluster']])
             st.bar_chart(df_orig['cluster'].value_counts())
     except Exception as e:
         st.error(f"Prediction failed: {e}")

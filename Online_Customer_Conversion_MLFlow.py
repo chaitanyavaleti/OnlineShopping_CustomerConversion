@@ -9,7 +9,7 @@ from sklearn.preprocessing import StandardScaler, OneHotEncoder
 from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
 from sklearn.metrics import (
-    classification_report, roc_auc_score,
+    classification_report, roc_auc_score, accuracy_score, f1_score,
     mean_absolute_error, mean_squared_error, r2_score,
     silhouette_score, davies_bouldin_score
 )
@@ -30,11 +30,17 @@ warnings.filterwarnings("ignore")
 
 def create_weighted_converted(df, k=6, price_mode="normalized"):
     df_copy = df.copy()
+
+    drop_cols = ["order", "price"]
+    df_features = df_copy.drop(columns=drop_cols, errors='ignore')
     
     # Define temporary target for conversion
     df_copy["_temp_target"] = ((df_copy["order"] > 0) & (df_copy["price"] > 0)).astype(int)
     y_price = df_copy["_temp_target"]
-    X_price = df_copy.drop(columns=["_temp_target"])
+
+    X_price = df_features.drop(columns=["_temp_target"], errors='ignore')
+    X_price = df_features.select_dtypes(include=[np.number])
+    
     
     # Compute mutual info fast
     mi = mutual_info_classif(X_price.select_dtypes(include=[np.number]), y_price)
@@ -50,6 +56,17 @@ def create_weighted_converted(df, k=6, price_mode="normalized"):
     
     df_copy.drop(columns=['_temp_target'], inplace=True)
     return df_copy, top_features, weights
+
+def apply_weighted_conversion(df_new, top_features, weights):
+
+    df_new = df_new.copy()
+    
+    # Only use the preselected features
+    common_features = [f for f in top_features if f in df_new.columns]
+    df_new["conversion_score"] = (df_new[common_features] * weights).sum(axis=1)
+    df_new["converted"] = (df_new["conversion_score"] > df_new["conversion_score"].median()).astype(int)
+    
+    return df_new
 
 def evaluate_model(model_type, y_true=None, y_pred=None, X=None, cluster_labels=None):
     results = {}
@@ -101,30 +118,37 @@ def unified_pipeline(df, task="classification", target_col=None, n_clusters=3, k
     if target_col is None or target_col not in df.columns:
         print("⚡ Creating 'converted' dynamically using top K features...")
         
-        df, top_features, feature_weights = create_weighted_converted(df,k=k_features)
+        df_train, df_test = train_test_split(df, test_size=0.2, random_state=42)
+        
+        df_train, top_features, feature_weights = create_weighted_converted(df_train,k=k_features)
+        df_test = apply_weighted_conversion(df_test, top_features, feature_weights)
         target_col = "converted"
         print(f"Top features selected: {top_features}")
         print(f"Assigned weights: {feature_weights}")
     else:
-        top_features = df.drop(columns=[target_col, "session_id"], errors="ignore").columns.tolist()
+        df_train, df_test = train_test_split(df, test_size=0.2, random_state=42)
+        top_features = df_train.drop(columns=[target_col, "session_id"], errors="ignore").columns.tolist()
 
 
-    # Feature/target split
     if task in ["classification", "regression"]:
-        X = df[top_features]  # only top features
-        y = df[target_col]
-        if y.nunique() < 2:
+        X_train = df_train[top_features]
+        y_train = df_train[target_col]
+        X_test = df_test[top_features]
+        y_test = df_test[target_col]
+
+        if y_train.nunique() < 2:
             print(f"⚠️ Target column '{target_col}' has only one unique value. {task} cannot be performed.")
             return None
-        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-    else:  # clustering
+    elif task == "clustering":
         X = df[top_features]
         X_train = X_test = X
         y_train = y_test = None
+    else:
+        raise ValueError("task must be one of ['classification','regression','clustering']")
 
     # Preprocessing
-    numeric_features = X.select_dtypes(include=["int64", "float64"]).columns.tolist()
-    categorical_features = X.select_dtypes(include=["object"]).columns.tolist()
+    numeric_features = X_train.select_dtypes(include=["int64", "float64"]).columns.tolist()
+    categorical_features = X_train.select_dtypes(include=["object"]).columns.tolist()
 
     numeric_transformer = Pipeline([("scaler", StandardScaler())])
     categorical_transformer = Pipeline([("onehot", OneHotEncoder(handle_unknown="ignore"))])
@@ -182,10 +206,13 @@ def unified_pipeline(df, task="classification", target_col=None, n_clusters=3, k
                 except:
                     auc = np.nan
 
-                mlflow.log_metric("ROC-AUC", auc)
+                acc = accuracy_score(y_test, y_pred)
+                f1 = f1_score(y_test, y_pred)
+
+                mlflow.log_metrics({"ROC-AUC": auc, "Accuracy": acc, "F1-Score": f1})
                 mlflow.sklearn.log_model(pipe, name="model", registered_model_name=f"{task}_{name}", signature=signature, input_example=input_example)
-                run_info.append((name, auc, run_id, {"ROC-AUC": auc}))
-                results.append({"Model": name, "ROC-AUC": auc})
+                run_info.append((name, auc, run_id, {"ROC-AUC": auc, "Accuracy": acc, "F1-Score": f1}))
+                results.append({"Model": name, "ROC-AUC": auc, "Accuracy": acc, "F1-Score": f1})
 
             elif task == "regression":
                 pipe.fit(X_train, y_train)
@@ -210,7 +237,7 @@ def unified_pipeline(df, task="classification", target_col=None, n_clusters=3, k
                     encoder = OneHotEncoder(sparse_output=False, handle_unknown="ignore")
                     X_cat = encoder.fit_transform(X[categorical_features])
                     X_proc = np.hstack([X[numeric_features].values, X_cat])
-                    input_cols = numeric_features + list(enc.get_feature_names_out(categorical_features))
+                    input_cols = numeric_features + list(encoder.get_feature_names_out(categorical_features))
                 else:
                     X_proc = X[numeric_features].values
                     input_cols = numeric_features
@@ -271,6 +298,6 @@ print(best_cls)
 best_reg = unified_pipeline(train, task="regression", target_col="price")
 print(best_reg)
 
-best_cluster = unified_pipeline(train, task="clustering", n_clusters=3)
+best_cluster = unified_pipeline(train, task="clustering", n_clusters=5)
 print(best_cluster)
 
