@@ -44,10 +44,10 @@ Run training script to:
 ```bash
 Online_Customer_Conversion_MLFlow.py
 ```
-With accuracy metrics
-{'Best Model': 'XGBoost', 'Score': 1.0, 'Registered As': 'Best_classification_Model', 'Version': 14}
-{'Best Model': 'Linear Regression', 'Score': 0.9999999930470421, 'Registered As': 'Best_regression_Model', 'Version': 25}
-{'Best Model': 'KMeans', 'Score': 0.2199326863104838, 'Registered As': 'Best_clustering_Model', 'Version': 42}
+**With accuracy metrics**
+	{'Best Model': 'XGBoost', 'Score': 1.0, 'Registered As': 'Best_classification_Model', 'Version': 14}
+	{'Best Model': 'Linear Regression', 'Score': 0.9999999930470421, 'Registered As': 'Best_regression_Model', 'Version': 25}
+	{'Best Model': 'KMeans', 'Score': 0.2199326863104838, 'Registered As': 'Best_clustering_Model', 'Version': 42}
 ---
 
 ## 🌐 Run Streamlit App  
@@ -76,5 +76,6 @@ Open [http://localhost:8501](http://localhost:8501) in your browser.
 
 Chaitanya Valeti (MAE4 [AIML-C-WD-E-B18)
 Built as a Mini project for the **AIML (Artificial Intelligence & Machine Learning)** domain at GUVI (HCL Tech).
+
 
 
