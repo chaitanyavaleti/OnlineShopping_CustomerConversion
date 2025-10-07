@@ -242,6 +242,19 @@ def unified_pipeline(df, task="classification", target_col=None, n_clusters=3, k
                     X_proc = X[numeric_features].values
                     input_cols = numeric_features
 
+                df['cluster'] = cluster_labels  
+
+                # --- Compute cluster profiles ---
+                cluster_profiles = df.groupby('cluster').agg({
+                    'price_2': 'mean',
+                    'page1_main_category': lambda x: x.mode()[0],
+                    'model_photography': 'mean',
+                    'session_id': 'count'
+                }).rename(columns={'session_id': 'num_customers'}).reset_index()
+
+                print("Cluster Profiles:")
+                print(cluster_profiles)
+
                 signature = infer_signature(pd.DataFrame(X_proc, columns=input_cols), cluster_labels)
                 input_example = pd.DataFrame(X_proc[:5], columns=input_cols)
                 metrics = evaluate_model("clustering", X=X_proc, cluster_labels=cluster_labels) if len(set(cluster_labels)) > 1 else {"Silhouette Score": np.nan, "Davies-Bouldin Index": np.nan, "WCSS": np.nan}
