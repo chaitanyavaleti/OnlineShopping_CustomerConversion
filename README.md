@@ -75,13 +75,16 @@ This project segments customers based on their online behavior patterns, includi
 
 ## Cluster Interpretations
 
-**Cluster Profiles:**
-   **cluster   price_2  page1_main_category  model_photography  num_customers**
-0        0     1.593094           4           1.725422          15522
-1        1     2.000000           1           1.000000          36780
-2        2     1.529148           4           2.000000          20310
-3        3     1.000000           2           1.000000          44534
-4        4     1.520712           1           1.187225          15233
+## Cluster Profiles
+
+| Cluster | Price_2  | Page1_Main_Category | Model_Photography | Num_Customers |
+|---------|----------|-------------------|-----------------|---------------|
+| 0       | 1.593094 | 4                 | 1.725422        | 15522         |
+| 1       | 2.000000 | 1                 | 1.000000        | 36780         |
+| 2       | 1.529148 | 4                 | 2.000000        | 20310         |
+| 3       | 1.000000 | 2                 | 1.000000        | 44534         |
+| 4       | 1.520712 | 1                 | 1.187225        | 15233         |
+
 
 ### Cluster 0
 - **Average Spending (`price_2`)**: 1.59 → Moderate spending  
@@ -135,6 +138,7 @@ This project segments customers based on their online behavior patterns, includi
 
 Chaitanya Valeti (MAE4 [AIML-C-WD-E-B18)
 Built as a Mini project for the **AIML (Artificial Intelligence & Machine Learning)** domain at GUVI (HCL Tech).
+
 
 
 
